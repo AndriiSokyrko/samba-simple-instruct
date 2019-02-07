@@ -1,0 +1,190 @@
+DNS
+lesson 1
+1/ vi /etc/network/interfaces
+
+wee have
+auto ens31
+iface  ens31 inet dhcp
+-add 2 interface local network
+
+aad 2 netwodk interface
+--auto ens33
+--iface  ens33 inet static
+--address 192.168.0.1
+--netmask 255.255.255.
+--dns-nameserver 127.0.0.1
+--dns-domain domain.loc
+--dns-search domain.loc
+
+2/ ifconfig
+we see new 2 net
+3/ apt-get install openssh-server
+4/ sudo ufw disable 
+
+Урок2
+change gate for netcard
+vi /etc/network/interfaces
+
+set gate IP for inet card
+or /etc/resolv.d/tail
+--nameserver 192.168.0.1
+--nameserver 8.8.8.8
+-service  network restart
+1/ sudo apt-get install bind
+2/ resolconf -u
+3/ sudo vi /etc/samba/named.conf
+-forwarder{
+	192.168.0.1 //router or 8.8.8.8
+}
+
+listen-on{
+	127.0.0.7;
+	192.168.0.1;//local net
+}
+
+
+
+4/   service bind9 start
+5/ service bind9 status
+6/ clean /etc/resolvconf/resolv.conf.d/tail //if it has inserted nameserver
+7/  cd /etc/samaba/
+ -- cp db.local /var/lib/bind/forward
+-- vi /var/lib/bind/forward
+
+--$TTL    604800
+@       IN      SOA     ubsrv.domain.loc. root.ubsrv.domain.loc. (
+20141126        ; Serial
+604800         ; Refresh
+86400         ; Retry
+2419200         ; Expire
+604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ubsrv.lab.loc.
+@       IN      A       192.168.0.1
+ @       IN      AAAA    ::1
+ubsrv   IN      A       192.168.0.1
+test 	IN   A  192.168.0.111
+
+//save
+
+/8   cp db.192/var/lib/bind/revers
+$TTL    604800
+@       IN      SOA     ubsrv.domain.loc. root.ubsrv.domain.loc. (
+20141126        ; Serial
+604800         ; Refresh
+86400         ; Retry
+2419200         ; Expire
+604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ubsrv.
+1       IN      PTR     ubsrv.domain.loc.
+111   IN   PTR    test.domain.loc
+
+
+
+8/
+
+dnssec-keygen -a HMAC-MD5 -b 128 -r /dev/urandom -n USER DHCP_UPDATER
+
+Key: 4GD8OIb8pZk4vAueACAfUQ==
+
+ Обязательно сохраните этот ключ, в последующей настройке он нам понадобится 
+9/  vi name.conf.local
+
+key DHCP_UPDATER {
+algorithm HMAC-MD5.SIG-ALG.REG.INT;
+secret "4GD8OIb8pZk4vAueACAfUQ=="; 
+};
+zone "domain.loc" {
+        type master;
+        file "/var/lib/bind/forward";
+allow-update { key DHCP_UPDATER; };
+};
+//reverse zone
+zone "0.168.192.in-addr.arpa" {
+        type master;
+        file "/var/lib/bind/rewers";
+allow-update { key DHCP_UPDATER; };
+};
+
+/10  host   test
+host 192.168.0.111
+
+sudo /etc/init.d/bind9 restart
+
+nslookup 192.168.0.1
+
+//11  DHCP
+
+-apt-get install isc-dhcp-server
+-   /etc/dhcp/dhcp.conf
+idns-update on;
+key DHCP_UPDATER {
+algorithm HMAC-MD5.SIG-ALG.REG.INT;
+secret "4GD8OIb8pZk4vAueACAfUQ=="; 
+};
+
+zone "domain.loc" {
+primary 192.168.0.1;
+ key DHCP_UPDATER; };
+};
+//reverse zone
+zone "0.168.192.in-addr.arpa" {
+    primary 192.168.0.1 
+key DHCP_UPDATER; };
+};
+
+authoritative; // we add
+добавить свою зону
+subnet 192.16.0.0 netmask 255.255.255.0 {
+range 192.168.0.101 192.168.0.199;
+option domain-name "DOMAIN.LOC";
+option domain-name-servers 192.168.0.1;
+option routers 192.168.0.1;
+option broadcast-address 192.168.0.255;
+}
+
+for reservide address
+Host fileserver{
+hardware ethernet 08:02:24:25:25;
+fix-address 192.168.0.134;
+}
+
+12/  /etc/default/isc.conf
+
+intreface ens33 //for inter net
+13/  ers.log
+vi /etc/rsyslog.conf
+--add string
+loca7.*  /var/log/dhcpd.log 
+
+14/  touch  /var/log/dhcpd.log
+
+15/  sudo service syslog restart
+
+service isc restart
+
+16/  adress arends
+/var/lib/dhcp/dhcp.leases
+
+урок 5
+ связка  dhcp and dns
+0/
+-chown syslog:adm /var/log/dhcpd.log
+service rsyslog restart
+
+1/ ls /var/lib/bind 
+
+if error
+tail -n 30 /var/log/dhcpd.log
+
+2/  se to   workstation  for get addres from dhcp Ubuntu
+
+3/ cat /var/lib/dhcpd.leases
+see on arrend addres
+ 4/ cat cat /var/lib/forward.bin
+
+5/cat /var/lib/reverce.bin
+
+
+

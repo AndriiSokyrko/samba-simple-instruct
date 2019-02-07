@@ -1,0 +1,298 @@
+practika  RAID 1
+1/ sudo fdisk -L  какие есть диски
+2/ dev/sda 
+- на нем есть три раздела линукс
+- /dev/sdb 10Gb
+-/dev/sdb 10Gb 	
+
+3/ Создаем зеркало
+- / fdisk /dev/sdb
+- n(new)
+-P(primary)
+-type  pres t
+- L выбор  типа  fd auto
+- w (write)
+4/ поторяет 3 пунки для /dev/sdc
+5/ check fdisk -l
+- eppirinece sdc1 and sdb1
+6/ apt-get install mdadm
+7/ sudo mdadm --create --verbose /dev/md0  --level=1 --raid-device=2 /dev/sdb1 /dev/sdc1
+8/ check process 
+-watch cat /proc/mdstat  how procent
+9/ cat /etc/mdadm/mdadm.conf
+- echo "Device partitions ">>/etc/mdadm/mdadm.conf
+-mdadm --dtail --scan --verbose | awk  '/ARRAY/ {print}'>>  /etc/mdadm/mdadm.conf
+10/  chreck / cat /etc/mdadm/mdadm.conf
+11/ MAILADDR  sorey14@gmail.com >>  /etc/mdadm/mdadm.conf if install sendmail
+12/  repeat ITIM 3  steup type Linux 83 
+- appirience md0p1
+13/mkfs.ext4 /dev/md0p1
+
+Lesson2
+1/ check Raid 
+-cat /proc/mdstat
+2/ mount raid
+- mkdir data
+-sodo mount /dev/md12p1 /data
+-cd data
+- sudo chown root:senaev Data
+- stat data
+- cd data
+- mkdir Folder
+- uptime> uptime.txt
+3/ for auto mount
+-/etc/fstab add
+- ID partition s
+-sudo blkid get ID
+4/ add mouse to system
+-apt-get instal gpm
+sudo blkid get ID
+- vi /etc/fstab 
+insert 
+#New Raid
+UUID=1212121212121ID /data ext4 defaults
+/restart
+
+Lesson3
+1/ /dev/md127p1 why?
+- need to do
+- update -initramfs -u
+-restart
+- blkid show  mdop1
+
+ /2 Repair raid
+ show  S or M and squere
+- take M manual
+-take S skip and go to system
+1/ stop rad
+ -mdadm --stop /dev/md0
+-mdadm -assemble --scan
+-or restart or remount
+- wee need  find faile disk
+- remove
+-add new disk
+resatrt
+2/ mdadm --deatil /dev/md0
+second has clean and degraded
+3/  make item 3 1Lesson
+
+4/ mdadm /dev/md0 --add /dev/sdc1
+5/ cat /proc/mdstat show new repars Raid
+
+ Lesson4
+SAMBA
+1/CD data
+-mkdir shared
+-stat Sahred  (who own directory)
+2/ install samba
+-sudo apt-get install smaba
+-cp /etc/samba/smb.conf  cmb.conf.old
+- server string  - ower  string
+- server role = stand alone
+-/3 create new section for shared fir
+-[Share folder number 1]
+comment = some shared folde
+path = /data/shared
+inherit acls = yes
+writable = yes
+
+valid users = semaev
+read list = semaev
+write list = semaev
+/   save file
+4/ sudo testparm
+5/ sudo smbpasswd -a semaev
+enter passwd;*******
+6/ service smbd restart
+7/test from cp windows 8
+- network enviritment  look  an will see shared dir
+
+LESSON5
+1/ additional option samba
+- groupadd Buhs
+- useradd -G Buhs buh1
+- cd rf shared
+- nkdir shared1
+- stat shared1
+-mkdir shared2
+--chown buh1:semaev shared2
+--chmod 770 shared2 shared2
+-mkdir shared3
+--chown buh1:semaev shared3
+--chmod 770 shared2 shared 3
+ -mkdir shared4
+--stat shared4
+--775 semaev
+2/ vi /etc/smb.conf
+
+[shared1]
+ path = /data/shared1
+writable = yes
+write list - semaev
+
+[shared2]
+ path = /data/shared2
+inherit owner = yes ( for removable profile)
+inherit permossions = yes
+writable = yes
+write list = semaev
+
+[shared3]
+ path = /data/shared3
+#inherit owner = yes ( for removable profile)
+#inherit permossions = yes
+writable = yes
+write list = semaev
+force user = buh1
+force group = Buhs
+create mask = 0777
+
+[shared4]
+ path = /data/shared4
+#inherit owner = yes ( for removable profile)
+#inherit permossions = yes
+writable = yes
+#write list = semaev
+guest ok = yes
+
+/3 testparm
+4/ service smbd  restart
+5/ chmod 777 shared (all shared)
+6/   
+ 
+LESSON 6
+1/add to windows controller domain
+-sudo aptitude update (update information about repositores)
+- for exaple aptitude search winbind
+- p packet not install  i - packet installed
+2/  aptitude install winbind  krb5-user ntp
+ -- kerberos  demand  DOMAIN
+	----DOMAIN.LOC
+	----SERVER.LOC   name server controller domain
+3/aptitude install libpam-krb5 libpam-winbind libnss-winbind
+4/ vi /etc/resolv.conf
+search  domain.loc
+nameserver server.loc
+
+5/  /etc/resolvconf/resolvconf.d/head
+for  eppairence in    /etc/resolv.conf
+
+6/rename  pc
+/etc/hostname
+ smb-server
+
+7/ /etc/host
+vi 127.0.0.1 smb-server.domail.loc smb-server
+
+8/ restart now
+8/  test dns
+-nslookup  smb-server.domain.loc
+-nslookup  ip.ip.ip.ip
+
+-ping ip.ip.ip.ip
+
+9/  tune NTS
+vi /etc/np\tp.conf
+add  server server.domain.loc  (from windows controller domain
+)
+
+10/ server ntp  restart
+11/ /etc/vi crb5.conf
+
+[domai_realm]
+--add text
+
+.domain.loc =  DOMAIN.LOC
+domain.loc = DOMAIN.LOC
+11/  test kerberos
+
+-kinit adadm@domain.loc
+-klist (for test)
+and we recived  infor tiket -time start and finished
+
+Lessson 7
+1/ change sambs workgroup
+- vi /etc/samba/smb.conf
+
+--workgroup = DOMAIN
+--realm = DOMAIN.LOC
+--security =  ADS
+--auth methods = winbind
+-- winbind enum users = yes
+-- winbind enum groups = yes
+-- winbind use default domain =yes (fro short name user wisout @DOMAIN.LOC)
+-- winbind separotor = DOMAIN
+
+--comment 
+#server role  
+#passwd all
+#pam 
+
+2/ testparm 
+3/ add smb-server to  domain
+-sudo  net ads join -U adadm@DOMAIN.LOC
+
+4/ go to windows domain controller
+check  inserting new sambs
+
+5/ vi /etc/nsswitch.conf
+passwd :  files winbind 
+group : files winbind
+shadow: files winbind
+SAVE
+restart winbind and samba
+
+3/ wbinfo -u  for linux see windows user
+we must windows users and group
+
+4/ id adadmin
+will  see id UID=***********
+
+
+Lesson 8
+1/vi  etc/samba/smb.conf
+-- idmap config * : = 10000-20000
+save   esc z z
+
+2/ service smbd restart
+3/ id adadmin
+3/ getent passwd
+will se  users
+
+4/ getent groups
+****** wil se info groups
+
+5/  change  permission
+chown adadmin:semaev  shared
+
+6/ chmod 750 shared
+
+7/  etc/samba/smb.conf
+delete or rem
+#valid users
+#read list
+#write list
+save 
+8/ testprm
+9/ service restart smbd
+
+10/ go to windows client
+- look for linux smb-server
+
+dir shared an test
+
+The end   Samba!!!!!!!!!!!
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
